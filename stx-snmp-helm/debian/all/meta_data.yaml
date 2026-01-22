@@ -3,6 +3,7 @@ debname: stx-snmp-helm
 debver: 1.0-2
 src_path: stx-snmp-helm
 revision:
+  stx_patch: 0
   dist: $STX_DIST
   GITREVCOUNT:
     SRC_DIR: ${MY_REPO}/stx/snmp-armada-app
