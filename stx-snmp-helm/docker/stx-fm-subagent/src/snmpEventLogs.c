@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020-2023 Wind River Systems, Inc.
+* Copyright (c) 2020-2026 Wind River Systems, Inc.
 *
 * SPDX-License-Identifier: Apache-2.0
 *
@@ -149,7 +149,7 @@ header_eventLogEntry(struct variable *vp,
 {
 #define ALM_ENTRY_NAME_LENGTH    14
     oid             newname[MAX_OID_LEN];
-    register int    index;
+    int             index;
     int             result, count;
 
     DEBUGMSGTL(("cgtsAgentPlugin", "header_eventLogEntry: "));
