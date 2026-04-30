@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2021, 2026 Wind River Systems, Inc.
+* Copyright (c) 2021 Wind River Systems, Inc.
 *
 * SPDX-License-Identifier: Apache-2.0
 *
@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
-#include <unistd.h>
 #include <json-c/json.h>
 #include <netdb.h>
 #include <net-snmp/net-snmp-config.h>
