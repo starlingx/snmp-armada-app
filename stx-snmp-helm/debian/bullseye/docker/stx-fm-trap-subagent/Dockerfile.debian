@@ -7,6 +7,19 @@ RUN apt-get -y install\
            libsnmp-dev \
            gcc \
            make
+ # Upgrade packages to latest security-patched versions to fix CVEs
+RUN apt-get -y install --only-upgrade \
+           libssl1.1 \
+           libgnutls30 \
+           libpng16-16 \
+           libfreetype6 \
+           perl-base \
+           perl-modules-5.32 \
+           libc6 \
+           libc-bin \
+           e2fsprogs \
+           libtiff5 \
+           libexpat1
 
 WORKDIR /home/trapagent
 COPY src/* ./src/

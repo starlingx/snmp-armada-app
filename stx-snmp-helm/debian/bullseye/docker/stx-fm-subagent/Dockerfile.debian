@@ -24,6 +24,14 @@ RUN apt-get -y install\
            uuid-dev \
            # CVE-2023-33204 mitigation
            sysstat
+ # Upgrade packages to latest security-patched versions to fix CVEs
+RUN apt-get -y install --only-upgrade \
+           libssl1.1 \
+           libpng16-16 \
+           libpython3.9-minimal \
+           libpython3.9-stdlib \
+           python3.9 \
+           python3.9-minimal
 
 WORKDIR /home/sub-agent
 COPY --from=stx /usr/lib/libfmcommon.so.1.0 /usr/lib/

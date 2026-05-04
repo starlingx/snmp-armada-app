@@ -1,5 +1,5 @@
 /*
-* Copyright (c) 2020-2023 Wind River Systems, Inc.
+* Copyright (c) 2020-2023, 2026 Wind River Systems, Inc.
 *
 * SPDX-License-Identifier: Apache-2.0
 *
@@ -17,12 +17,12 @@
 #include <fmDbAPI.h>
 #include "snmpAgentPlugin.h"
 
-#define MINLOADFREQ 2     /* min reload frequency in seconds */
+#define MINLOADFREQ 1     /* min reload frequency in seconds */
 
 netsnmp_feature_require(date_n_time);
 
 
-static long Event_Log_Count = 0;
+static long Active_Alarm_Count = 0;
 static struct activealarm *alarm_list;
 static struct activealarm *alarmaddr, savealarm, *savealarmaddr;
 static int saveIndex = 0;
@@ -32,10 +32,10 @@ static long LastLoad = 0;     /* ET in secs at last table load */
 extern long long_return;
 
 
-int Event_Log_Get_Count(void);
+int Active_Alarm_Get_Count(void);
 
 static void
-Event_Log_Scan_Init()
+Alarm_Scan_Init()
 {
     struct timeval et;       /* elapsed time */
     struct activealarm  **activealarm_ptr;
@@ -63,26 +63,26 @@ Event_Log_Scan_Init()
     activealarm_ptr = &alarm_list;
 
     /*
-     * query event log list from DB
+     * query active alarm list from DB
      */
-    bool isEventObtained = false;
+    bool isAlarmObtained = false;
     for (i = 0; i < retryCount; i++){
-        if (fm_snmp_util_get_all_event_logs(getAlarmSession(), &aquery)){
-            DEBUGMSG(("cgtsAgentPlugin", "get_all_event_logs done\n"));
-            isEventObtained = true;
+        if (fm_snmp_util_get_all_alarms(getAlarmSession(), &aquery)){
+            DEBUGMSG(("cgtsAgentPlugin", "get_all_alarms done\n"));
+            isAlarmObtained = true;
             break;
         } else {
             DEBUGMSG(("cgtsAgentPlugin", 
-            "get_all_event_logs returns false (%zu/%ld). Try again\n",
+            "get_all_alarms returns false (%zu/%ld). Try again\n",
              (i+1), retryCount));
             renewAlarmSession();
         }
     }
-    if (!isEventObtained) {
-        DEBUGMSG(("cgtsAgentPlugin", "get_all_event_logs from db failed\n"));
+    if (!isAlarmObtained) {
+        DEBUGMSG(("cgtsAgentPlugin", "get_all_alarms from db failed\n"));
         return;
     }
-    DEBUGMSG(("cgtsAgentPlugin", "get_all_event_logs returns %lu logs\n", aquery.num));
+    DEBUGMSG(("cgtsAgentPlugin", "get_all_alarms returns %lu alarms\n", aquery.num));
     for (i = 0; i < aquery.num; ++i){
         struct activealarm   *almnew;
         /*populate alarm_list*/
@@ -99,7 +99,7 @@ Event_Log_Scan_Init()
 }
 
 static int
-Event_Log_Scan_NextLog(int *Index,
+Alarm_Scan_NextAlarm(int *Index,
         char *Name,
         struct activealarm *Aalm)
 {
@@ -123,15 +123,15 @@ Event_Log_Scan_NextLog(int *Index,
 }
 
 static int
-Event_Log_Scan_By_Index(int Index,
+Alarm_Scan_By_Index(int Index,
         char *Name,
         struct activealarm *Aalm)
 {
     int i;
 
-    DEBUGMSGTL(("cgtsAgentPlugin","Event_Log_Scan_By_Index"));
-    Event_Log_Scan_Init();
-    while (Event_Log_Scan_NextLog(&i, Name, Aalm)) {
+    DEBUGMSGTL(("cgtsAgentPlugin","Alarm_Scan_By_Index"));
+    Alarm_Scan_Init();
+    while (Alarm_Scan_NextAlarm(&i, Name, Aalm)) {
         if (i == Index)
             break;
     }
@@ -141,7 +141,7 @@ Event_Log_Scan_By_Index(int Index,
 }
 
 static int
-header_eventLogEntry(struct variable *vp,
+header_alarmEntry(struct variable *vp,
                oid * name,
                size_t * length,
                int exact, size_t * var_len,
@@ -149,19 +149,19 @@ header_eventLogEntry(struct variable *vp,
 {
 #define ALM_ENTRY_NAME_LENGTH    14
     oid             newname[MAX_OID_LEN];
-    register int    index;
+    int             index;
     int             result, count;
 
-    DEBUGMSGTL(("cgtsAgentPlugin", "header_eventLogEntry: "));
+    DEBUGMSGTL(("cgtsAgentPlugin", "header_alarmEntry: "));
     DEBUGMSGOID(("cgtsAgentPlugin", name, *length));
     DEBUGMSG(("cgtsAgentPlugin", "exact %d\n", exact));
 
     memcpy((char *) newname, (char *) vp->name,
            (int) vp->namelen * sizeof(oid));
     /*
-     * find "next" log
+     * find "next" alarm
      */
-    count = Event_Log_Get_Count();
+    count = Active_Alarm_Get_Count();
     DEBUGMSG(("cgtsAgentPlugin", "count %d\n", count));
     for (index = 1; index <= count; index++) {
         newname[ALM_ENTRY_NAME_LENGTH] = (oid) index;
@@ -190,25 +190,26 @@ header_eventLogEntry(struct variable *vp,
     return index;
 }
 
+
 int
-Event_Log_Get_Count(void)
+Active_Alarm_Get_Count(void)
 {
     static time_t   scan_time = 0;
     time_t          time_now = time(NULL);
 
-    if (!Event_Log_Count || (time_now > scan_time + 60)) {
+    if (!Active_Alarm_Count || (time_now > scan_time + 60)) {
         scan_time = time_now;
-        Event_Log_Scan_Init();
-        Event_Log_Count = 0;
-        while (Event_Log_Scan_NextLog(NULL, NULL, NULL) != 0) {
-            Event_Log_Count++;
+        Alarm_Scan_Init();
+        Active_Alarm_Count = 0;
+        while (Alarm_Scan_NextAlarm(NULL, NULL, NULL) != 0) {
+            Active_Alarm_Count++;
         }
     }
-    return (Event_Log_Count);
+    return (Active_Alarm_Count);
 }
 
 u_char *
-var_events(struct variable *vp,
+var_alarms(struct variable *vp,
             oid * name,
             size_t * length,
             int exact, size_t * var_len,
@@ -219,62 +220,59 @@ var_events(struct variable *vp,
     char           *cp;
     int index = 0;
 
-    DEBUGMSGTL(("cgtsAgentPlugin", "var_events"));
-    index = header_eventLogEntry(vp, name, length, exact, var_len, write_method);
+    DEBUGMSGTL(("cgtsAgentPlugin", "var_alarms"));
+    index = header_alarmEntry(vp, name, length, exact, var_len, write_method);
     if (index == MATCH_FAILED)
         return NULL;
 
-    Event_Log_Scan_By_Index(index, Name, &alrm);
+    Alarm_Scan_By_Index(index, Name, &alrm);
 
     switch (vp->magic) {
-    case EVENT_INDEX:
+    case ALARM_INDEX:
         long_return = index;
         return (u_char *) & long_return;
-    case EVENT_UUID:
+    case ALARM_UUID:
         cp = Name;
         *var_len = strlen(cp);
         return (u_char *) cp;
-    case EVENT_EVENT_ID:
+    case ALARM_ID:
         cp = alrm.alarmdata.alarm_id;
         *var_len = strlen(cp);
         return (u_char *) cp;
-    case EVENT_STATE:
-        long_return = alrm.alarmdata.alarm_state;
-        return (u_char *) & long_return;
-    case EVENT_INSTANCE_ID:
+    case ALARM_INSTANCE_ID:
         cp = alrm.alarmdata.entity_instance_id;
         *var_len = strlen(cp);
         return (u_char *) cp;
-    case EVENT_TIME:{
+    case ALARM_TIME:{
         time_t when = alrm.alarmdata.timestamp/SECOND_PER_MICROSECOND;
         cp = (char *) date_n_time(&when, var_len );
         return (u_char *) cp;
     }
-    case EVENT_SEVERITY:
+    case ALARM_SEVERITY:
         long_return = alrm.alarmdata.severity;
         return (u_char *) & long_return;
-    case EVENT_REASONTEXT:
+    case ALARM_REASONTEXT:
         cp = alrm.alarmdata.reason_text;
         *var_len = strlen(cp);
         return (u_char *) cp;
-    case EVENT_EVENTTYPE:
+    case ALARM_EVENTTYPE:
         long_return = alrm.alarmdata.alarm_type;
         return (u_char *) & long_return;
-    case EVENT_PROBABLECAUSE:
+    case ALARM_PROBABLECAUSE:
         long_return = alrm.alarmdata.probable_cause;
         return (u_char *) & long_return;
-    case EVENT_REPAIRACTION:
+    case ALARM_REPAIRACTION:
         cp = alrm.alarmdata.proposed_repair_action;
         *var_len = strlen(cp);
         return (u_char *) cp;
-    case EVENT_SERVICEAFFECTING:
+    case ALARM_SERVICEAFFECTING:
         long_return = alrm.alarmdata.service_affecting;
         return (u_char *) & long_return;
-    case EVENT_SUPPRESSION:
+    case ALARM_SUPPRESSION:
         long_return = alrm.alarmdata.suppression;
         return (u_char *) & long_return;
     default:
-        DEBUGMSGTL(("snmpd", "unknown sub-id %d in var_events\n",
+        DEBUGMSGTL(("snmpd", "unknown sub-id %d in var_alarms\n",
                 vp->magic));
     }
     return NULL;

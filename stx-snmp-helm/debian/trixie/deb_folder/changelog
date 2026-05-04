@@ -1,0 +1,12 @@
+stx-snmp-helm (1.0-2) unstable; urgency=medium
+
+  * Split helm chart into separate package and apply auto versioning.
+
+ --  Joshua Reed <joshua.reed@windriver.com>  Fri, 16 Feb 2024 20:07:42 +0000
+
+
+stx-snmp-helm (1.0-1) unstable; urgency=medium
+
+  * Initial release.
+
+ --  Tracey Bogue <tracey.bogue@windriver.com>  Fri, 5 Nov 2021 08:32:42 +0000
