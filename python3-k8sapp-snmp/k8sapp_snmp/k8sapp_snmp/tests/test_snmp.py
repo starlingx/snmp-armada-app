@@ -1,4 +1,5 @@
-# Copyright (c) 2023 Wind River Systems, Inc.
+#
+# Copyright (c) 2023, 2026 Wind River Systems, Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -14,12 +15,15 @@ class SnmpTestCase(test_plugins.K8SAppSnmpAppMixin,
                           base.HelmTestCaseMixin):
 
     def setUp(self):
+        """Set up SNMP test case with test app."""
         super(SnmpTestCase, self).setUp()
         self.app = dbutils.create_test_app(name='snmp')
         self.dbapi = dbapi.get_instance()
 
 
-class SnmpTestCaseDummy(SnmpTestCase, dbbase.ProvisionedControllerHostTestCase):
-    # without a test zuul will fail
+class SnmpTestCaseDummy(
+        SnmpTestCase,
+        dbbase.ProvisionedControllerHostTestCase):
     def test_dummy(self):
+        """Placeholder test to prevent empty suite."""
         pass

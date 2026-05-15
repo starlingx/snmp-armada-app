@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2020 Wind River Systems, Inc.
+# Copyright (c) 2020, 2026 Wind River Systems, Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -17,6 +17,7 @@ class K8SAppSnmpAppMixin(object):
     path_name = app_name + '.tgz'
 
     def setUp(self):
+        """Set up SNMP app mixin with mocked DB."""
         super(K8SAppSnmpAppMixin, self).setUp()
         get_db_connection = mock.patch.object(SnmpHelm,
                 '_get_database_connection')
@@ -30,9 +31,9 @@ class K8SAppSnmpAppMixin(object):
 # - Ceph Storage
 # - snmp app
 class K8sAppSnmpControllerTestCase(K8SAppSnmpAppMixin,
-                                      dbbase.BaseIPv6Mixin,
-                                      dbbase.BaseCephStorageBackendMixin,
-                                      dbbase.ControllerHostTestCase):
+                                   dbbase.BaseIPv6Mixin,
+                                   dbbase.BaseCephStorageBackendMixin,
+                                   dbbase.ControllerHostTestCase):
     pass
 
 

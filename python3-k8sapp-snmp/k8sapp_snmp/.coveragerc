@@ -1,0 +1,5 @@
+[run]
+omit =
+    k8sapp_snmp/tests/*
+    */tests/*
+    setup.py
