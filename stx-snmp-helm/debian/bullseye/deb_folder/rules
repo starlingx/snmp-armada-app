@@ -19,6 +19,15 @@ export STAGING = staging
 	dh $@
 
 override_dh_auto_build:
+	# Image tag substitution defaults
+	$(eval OS_CODENAME ?= bullseye)
+
+	# Substitute image tags in helm chart values
+	find /usr/lib/helm -name 'values.yaml' -exec \
+	  sed -i \
+	  	-e 's|@OS_CODENAME@|$(OS_CODENAME)|g' \
+		{} +
+
 	# Setup the staging directory.
 	mkdir -p $(STAGING)
 	cp files/metadata.yaml $(STAGING)
