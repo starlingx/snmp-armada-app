@@ -26,20 +26,21 @@ PY3 = sys.version_info[0] == 3
 class SnmpHelm(base.BaseHelm):
     """Class to encapsulate helm operations for the SNMP chart"""
 
-    SUPPORTED_NAMESPACES = base.BaseHelm.SUPPORTED_NAMESPACES + \
-        [common.HELM_NS_KUBE_SYSTEM]
+    SUPPORTED_NAMESPACES = base.BaseHelm.SUPPORTED_NAMESPACES + [
+        common.HELM_NS_KUBE_SYSTEM
+    ]
     SUPPORTED_APP_NAMESPACES = {
-        constants.HELM_APP_SNMP:
-            base.BaseHelm.SUPPORTED_NAMESPACES + [common.HELM_NS_KUBE_SYSTEM],
+        constants.HELM_APP_SNMP: base.BaseHelm.SUPPORTED_NAMESPACES
+        + [common.HELM_NS_KUBE_SYSTEM],
     }
 
     CHART = app_constants.HELM_CHART_SNMP
 
-    SERVICE_NAME = 'snmp'
-    SERVICE_FM_NAME = 'fm'
+    SERVICE_NAME = "snmp"
+    SERVICE_FM_NAME = "fm"
     SERVICE_FM_PORT = 18002
-    DB_FM_ADMIN = 'admin-fm'
-    UNDEFINED_CONF_VALUE = '?'
+    DB_FM_ADMIN = "admin-fm"
+    UNDEFINED_CONF_VALUE = "?"
     KERNEL_RELEASE_IDX = 2
 
     def _unicode_represent(self, data):
@@ -48,7 +49,7 @@ class SnmpHelm(base.BaseHelm):
                 result = ensure_str(data)
                 # Try to encode to detect bad translation
                 # for multi-bytes characters
-                result.encode('utf-8')
+                result.encode("utf-8")
                 return result
             except Exception:
                 return ensure_text(data)
@@ -59,28 +60,33 @@ class SnmpHelm(base.BaseHelm):
     def _get_keyring_password(self, service, user):
         password = keyring.get_password(service, user)
         if not password:
-            raise Exception('Failed to obtain password for fm database')
+            raise Exception("Failed to obtain password for fm database")
         # get_password() returns in unicode format, which leads to YAML
         # that Armada doesn't like.  Converting to UTF-8 is safe because
         # we generated the password originally.
         # Update Debian: in Python3, using encode produces error connection
         # to database.
-        ret_password = ''
+        ret_password = ""
         if PY2:
-            ret_password = password.encode('utf8', 'strict')
+            ret_password = password.encode("utf8", "strict")
         if PY3:
             ret_password = password
         return ret_password
 
     def _get_database_connection(self):
-        host_url = (constants.CONTROLLER_FQDN if utils.is_fqdn_ready_to_use()
-                    else self._format_url_address(self._get_management_address()))
+        host_url = (
+            constants.CONTROLLER_FQDN
+            if utils.is_fqdn_ready_to_use()
+            else self._format_url_address(self._get_management_address())
+        )
 
-        auth_password = self._get_keyring_password(
-            self.SERVICE_FM_NAME, 'database')
-        connection = "postgresql://%s:%s@%s/%s" %\
-                     (self.DB_FM_ADMIN, auth_password,
-                     host_url, self.SERVICE_FM_NAME)
+        auth_password = self._get_keyring_password(self.SERVICE_FM_NAME, "database")
+        connection = "postgresql://%s:%s@%s/%s" % (
+            self.DB_FM_ADMIN,
+            auth_password,
+            host_url,
+            self.SERVICE_FM_NAME,
+        )
         return connection
 
     def get_namespaces(self):
@@ -105,16 +111,25 @@ class SnmpHelm(base.BaseHelm):
 
         # Get the contact, location, name and desciption info
         system = dbapi.isystem_get_one()
+
+        # Get NodePort overrides from service parameters (if configured)
+        node_ports = self._get_snmp_node_ports(dbapi)
+
         overrides = {
             common.HELM_NS_KUBE_SYSTEM: {
-                'configmap': {
-                    'connection': self._unicode_represent(db_url),
-                    'system_contact': self._unicode_represent(system.contact),
-                    'system_location': self._unicode_represent(
-                        system.location),
-                    'system_name': self._unicode_represent(system.name),
-                    'system_description': self._unicode_represent(
-                        system.software_version) + ' ' + self.get_system_info()
+                "configmap": {
+                    "connection": self._unicode_represent(db_url),
+                    "system_contact": self._unicode_represent(system.contact),
+                    "system_location": self._unicode_represent(system.location),
+                    "system_name": self._unicode_represent(system.name),
+                    "system_description": self._unicode_represent(
+                        system.software_version
+                    )
+                    + " "
+                    + self.get_system_info(),
+                },
+                "service": {
+                    "nodePorts": node_ports,
                 },
             }
         }
@@ -122,7 +137,26 @@ class SnmpHelm(base.BaseHelm):
         if namespace in self.SUPPORTED_NAMESPACES:
             return overrides[namespace]
         elif namespace:
-            raise exception.InvalidHelmNamespace(chart=self.CHART,
-                                                 namespace=namespace)
+            raise exception.InvalidHelmNamespace(chart=self.CHART, namespace=namespace)
         else:
             return overrides
+
+    def _get_snmp_node_ports(self, dbapi):
+        """Get SNMP NodePort values from service parameters, or use defaults."""
+        defaults = {
+            "snmp": 30161,
+            "agentx": 30705,
+            "trap": 30162,
+        }
+        node_ports = {}
+        for name, default in defaults.items():
+            try:
+                param = dbapi.service_parameter_get_one(
+                    service=constants.SERVICE_TYPE_SNMP,
+                    section=constants.SERVICE_PARAM_SECTION_SNMP_CONFIG,
+                    name="%s_nodeport" % name,
+                )
+                node_ports[name] = int(param.value)
+            except (exception.NotFound, exception.MultipleResults):
+                node_ports[name] = default
+        return node_ports

@@ -58,6 +58,10 @@ deployment:
 service:
   name: snmpd-service
   type: NodePort
+  nodePorts:
+    snmp: 30161
+    agentx: 30705
+    trap: 30162
 
 livenessProbe:
   initialDelaySeconds: 10

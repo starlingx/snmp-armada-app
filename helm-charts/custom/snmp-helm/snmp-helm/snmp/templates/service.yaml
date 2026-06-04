@@ -14,14 +14,17 @@ spec:
       port: 161
       protocol: UDP
       targetPort: 161
+      nodePort: {{ .Values.service.nodePorts.snmp }}
     - name: port-agentx
       port: 705
       protocol: TCP
       targetPort: 705
+      nodePort: {{ .Values.service.nodePorts.agentx }}
     - name: port-trap
       port: 162
       protocol: TCP
       targetPort: 162
+      nodePort: {{ .Values.service.nodePorts.trap }}
 
   selector:
     app.kubernetes.io/name: {{ include "snmp.name" . }}
