@@ -1,3 +1,6 @@
 helm-charts/custom/snmp-helm
 python3-k8sapp-snmp
 stx-snmp-helm
+stx-snmp-audit-plugin
+stx-snmp-subagent
+stx-snmp-trap-subagent

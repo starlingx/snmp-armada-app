@@ -1,0 +1,10 @@
+---
+debname: stx-snmp-subagent
+debver: 1.0-1
+src_path: stx-snmp-subagent
+revision:
+  stx_patch: 0
+  dist: $STX_DIST
+  GITREVCOUNT:
+    SRC_DIR: ${MY_REPO}/stx/snmp-armada-app
+    BASE_SRCREV: be277c83a95fecc4f029e7af8844ba9de1f630fb

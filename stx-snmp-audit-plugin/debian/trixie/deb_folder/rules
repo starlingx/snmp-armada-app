@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+export ROOT = debian/tmp
+export DEST_DIR = $(ROOT)/usr/lib
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	cd src && make -f Makefile
+
+override_dh_auto_install:
+	cd src && make install DESTDIR=$(CURDIR)/$(DEST_DIR)
+
+override_dh_auto_test:
