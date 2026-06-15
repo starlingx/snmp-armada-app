@@ -1,3 +1,4 @@
 .vscode/
 .tox
 venv/python3-k8sapp-snmp/k8sapp_snmp/UTCoverage/
+UTCoverage/
