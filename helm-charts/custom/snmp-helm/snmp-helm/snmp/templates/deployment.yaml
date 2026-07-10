@@ -65,14 +65,28 @@ spec:
           #   successThreshold: {{ .Values.readinessProbe.successThreshold }}
           #   failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
           volumeMounts:
+          {{- if .Values.secret.enabled }}
+          - name: snmpd-secret-volume
+            mountPath: /etc/snmp/snmpd.conf
+            subPath: snmpd.conf
+            readOnly: true
+          {{- else }}
           - name: snmpd-etc-volume
             mountPath: /etc/snmp
+          {{- end }}
         - name: {{ .Values.subagent.name }}
           image: "{{ .Values.subagent.image.repository }}:{{ .Values.subagent.image.tag }}"
           imagePullPolicy: {{ .Values.subagent.pull_policy }}
           volumeMounts:
+          {{- if .Values.secret.enabled }}
+          - name: snmpd-secret-volume
+            mountPath: /etc/fm/fm.conf
+            subPath: fm.conf
+            readOnly: true
+          {{- else }}
           - name: snmpd-fm-volume
             mountPath: /etc/fm/
+          {{- end }}
           env:
           - name: "OPTIONDEBUG"
             value: {{ .Values.image.debug }}
@@ -144,9 +158,15 @@ spec:
           #   successThreshold: {{ .Values.readinessProbe.successThreshold }}
           #   failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
       volumes:
+      {{- if .Values.secret.enabled }}
+      - name: snmpd-secret-volume
+        secret:
+          secretName: {{ .Values.secret.name | default "snmpd-secret" }}
+      {{- else }}
       - name: snmpd-etc-volume
         configMap:
           name: {{ .Values.configmap.name_snmpd }}
       - name: snmpd-fm-volume
         configMap:
           name: {{ .Values.configmap.name_fm }}
+      {{- end }}
