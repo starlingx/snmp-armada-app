@@ -1,0 +1,14 @@
+#!/usr/bin/make -f
+
+export ROOT = debian/tmp
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	make
+
+override_dh_auto_install:
+	make install DESTDIR=$(CURDIR)/$(ROOT)
+
+override_dh_auto_test:

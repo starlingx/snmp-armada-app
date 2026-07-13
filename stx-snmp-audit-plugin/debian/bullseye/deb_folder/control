@@ -1,0 +1,18 @@
+Source: stx-snmp-audit-plugin
+Section: libs
+Priority: optional
+Maintainer: StarlingX Developers <starlingx-discuss@lists.starlingx.io>
+Build-Depends: debhelper-compat (= 13),
+ gcc,
+ make,
+ libsnmp-dev,
+ uuid-dev
+Standards-Version: 4.5.1
+Homepage: https://www.starlingx.io
+
+Package: stx-snmp-audit-plugin
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: StarlingX SNMP Audit Plugin
+ Shared library plugin for SNMP audit logging in StarlingX.
