@@ -7,21 +7,21 @@ replicaCount: 1
 snmp:
   image:
     repository: docker.io/starlingx/stx-snmp
-    tag: stx.13.0-v1.0.1-@OS_CODENAME@
+    tag: stx.13.0-v1.0.2-@OS_CODENAME@
   pull_policy: IfNotPresent
 
 subagent:
   name: sub-agent
   image:
     repository: docker.io/starlingx/stx-fm-subagent
-    tag: stx.13.0-v1.0.1-@OS_CODENAME@
+    tag: stx.13.0-v1.0.2-@OS_CODENAME@
   pull_policy: IfNotPresent
 
 trap_subagent:
   name: trap-subagent
   image:
     repository: docker.io/starlingx/stx-fm-trap-subagent
-    tag: stx.13.0-v1.0.1-@OS_CODENAME@
+    tag: stx.13.0-v1.0.2-@OS_CODENAME@
   pull_policy: IfNotPresent
 
 image:
@@ -30,7 +30,7 @@ image:
 nameOverride: ""
 fullnameOverride: ""
 
-nodeSelector: { node-role.kubernetes.io/control-plane: "" }
+nodeSelector: {node-role.kubernetes.io/control-plane: ""}
 
 tolerations:
   - key: "node-role.kubernetes.io/control-plane"
