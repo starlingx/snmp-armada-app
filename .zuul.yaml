@@ -8,8 +8,13 @@
         - k8sapp-snmp-armada-tox-flake8
         - k8sapp-snmp-armada-tox-metadata
         - k8sapp-snmp-armada-tox-coverage
-        - k8sapp-snmp-armada-tox-security
+        - k8sapp-snmp-armada-tox-bandit
         - k8sapp-snmp-armada-tox-coverage-c
+        - k8sapp-snmp-armada-tox-linters-trixie
+        - k8sapp-snmp-armada-tox-bandit-trixie
+        - k8sapp-snmp-armada-tox-coverage-trixie
+        - k8sapp-snmp-armada-tox-coverage-c-trixie
+        - k8app-snmp-armada-tox-py313-trixie
     gate:
       jobs:
         - k8sapp-snmp-armada-tox-linters
@@ -18,8 +23,13 @@
         - k8sapp-snmp-armada-tox-flake8
         - k8sapp-snmp-armada-tox-metadata
         - k8sapp-snmp-armada-tox-coverage
-        - k8sapp-snmp-armada-tox-security
+        - k8sapp-snmp-armada-tox-bandit
         - k8sapp-snmp-armada-tox-coverage-c
+        - k8sapp-snmp-armada-tox-linters-trixie
+        - k8sapp-snmp-armada-tox-bandit-trixie
+        - k8sapp-snmp-armada-tox-coverage-trixie
+        - k8sapp-snmp-armada-tox-coverage-c-trixie
+        - k8app-snmp-armada-tox-py313-trixie
     post:
       jobs:
         - stx-snmp-armada-app-upload-git-mirror
@@ -121,20 +131,79 @@
     post-run: python3-k8sapp-snmp/k8sapp_snmp/k8sapp_snmp/tests/playbooks/upload-coverage-reports.yaml
 
 - job:
-    name: k8sapp-snmp-armada-tox-security
+    name: k8sapp-snmp-armada-tox-bandit
     parent: tox
     description: |
-      Run security analysis for k8sapp_snmp
+      Run bandit security analysis for k8sapp_snmp
     nodeset: debian-bullseye
     required-projects:
       - starlingx/root
     files:
       - python3-k8sapp-snmp/*
     vars:
-      tox_envlist: security
-      tox_extra_args: -c python3-k8sapp-snmp/k8sapp_snmp/tox.ini
+      tox_envlist: bandit
       tox_constraints_file: '{{ ansible_user_dir }}/src/opendev.org/starlingx/root/build-tools/requirements/debian/upper-constraints.txt'
-    post-run: python3-k8sapp-snmp/k8sapp_snmp/k8sapp_snmp/tests/playbooks/upload-security-reports.yaml
+
+- job:
+    name: k8sapp-snmp-armada-tox-linters-trixie
+    parent: openstack-tox-py313
+    description: |
+      Run linters (Trixie)
+    nodeset: debian-trixie-8GB
+    vars:
+      tox_envlist: linters-trixie
+      tox_inline_comments: false
+
+- job:
+    name: k8sapp-snmp-armada-tox-bandit-trixie
+    parent: openstack-tox-py313
+    description: |
+      Run bandit security analysis (Trixie)
+    nodeset: debian-trixie-8GB
+    required-projects:
+      - starlingx/root
+    vars:
+      tox_envlist: bandit-trixie
+
+- job:
+    name: k8sapp-snmp-armada-tox-coverage-trixie
+    parent: openstack-tox-py313
+    description: |
+      Run coverage analysis (Trixie)
+    nodeset: debian-trixie-8GB
+    required-projects:
+      - starlingx/config
+      - starlingx/fault
+      - starlingx/utilities
+      - starlingx/root
+    vars:
+      tox_envlist: coverage-trixie
+
+- job:
+    name: k8sapp-snmp-armada-tox-coverage-c-trixie
+    parent: openstack-tox-py313
+    description: |
+      Run C/C++ coverage analysis (Trixie)
+    nodeset: debian-trixie-8GB
+    vars:
+      tox_envlist: coverage-c-trixie
+
+- job:
+    name: k8app-snmp-armada-tox-py313-trixie
+    parent: openstack-tox-py313
+    description: |
+      Run py313 test for k8app-snmp-armada-app (Trixie)
+    nodeset: debian-trixie-8GB
+    required-projects:
+      - starlingx/config
+      - starlingx/fault
+      - starlingx/utilities
+      - starlingx/root
+    vars:
+      tox_envlist: py313
+      tox_extra_args: -c python3-k8sapp-snmp/k8sapp_snmp/tox.ini
+      tox_install_siblings: false
+      tox_constraints_file: '{{ ansible_user_dir }}/src/opendev.org/starlingx/root/build-tools/requirements/debian/trixie/upper-constraints.txt'
 
 - job:
     name: k8sapp-snmp-armada-tox-coverage-c
