@@ -1,3 +1,9 @@
+snmp-helm (1.2-0) unstable; urgency=medium
+
+  * Store SNMP sensitive data in K8s Secret
+
+ -- rummadis <ramu.ummadishetty@windriver.com>  Tue, 29 Jul 2026 06:32:00 +0000
+
 snmp-helm (1.1-1) unstable; urgency=medium
 
   * New upstream release 1.1-1

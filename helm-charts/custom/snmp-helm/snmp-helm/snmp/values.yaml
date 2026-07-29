@@ -50,6 +50,13 @@ configmap:
   system_location: ''
   connection: ''
 
+# When secret.enabled is true, sensitive data (SNMP credentials and
+# FM database connection) is stored in a Kubernetes Secret instead
+# of ConfigMaps.
+secret:
+  enabled: true
+  name: snmpd-secret
+
 deployment:
   master_agent_host: localhost
   master_agent_port: 705
